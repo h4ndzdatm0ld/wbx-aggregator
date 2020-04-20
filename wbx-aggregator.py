@@ -1,4 +1,7 @@
+#!/usr/bin/env python3
+
 import re, os, glob, sys, time, subprocess, difflib, json, yaml
+
 
 vpls = re.compile(r'(vpls\s\d.+\n.*\n.*\n.*\n.*\n.*\n.*)')
 
@@ -8,8 +11,6 @@ vpls = re.compile(r'(vpls\s\d.+\n.*\n.*\n.*\n.*\n.*\n.*)')
 # to dictionaries. Once the final dictionary is generated, the loop continues to generate a script to remove the VPLS and the SAPs and 
 # re-create them in the new, correct aggregate VPLS (300/400). A final script is generated and saved as a text file to use during the 
 # Maintenance Window # 1.
-
-
 
 
 def globfindfile(regex):
