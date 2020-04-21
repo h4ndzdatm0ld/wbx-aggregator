@@ -1,0 +1,27 @@
+
+#  VPLS Configuration for Telecom on the WBX
+
+/configure service vpls 300 customer 1 create description "Telecom-VPLS-gNB-
+eNB"
+/configure service vpls 300 mac-move primary-ports sap <lag-31:300> 
+/configure service vpls 300 mac-move primary-ports sap <lag-41:300>   # Redundant WBX
+/configure service vpls 300 mac-move move-frequency 1
+/configure service vpls 300 mac-move number-retries 1
+/configure service vpls 300 mac-move no shutdown
+/configure service vpls 300 no shutdown
+
+/configure service vpls 400 customer 4 create description “OAM-VPLS-gNB-eNB"
+/configure service vpls 400 stp shutdown
+/configure service vpls 400 mac-move primary-ports sap <lag-31:300> 
+/configure service vpls 400 mac-move primary-ports sap <lag-41:300>  # Redundant WBX
+/configure service vpls 400 mac-move move-frequency 1
+/configure service vpls 400 mac-move number-retries 1
+/configure service vpls 400 mac-move no shutdown
+/configure service vpls 400 no shutdown
+
+
+# Updated administrative profile to disable “SAP shutdown”
+
+/configure system security profile “administrative” entry 171 match
+“configure service vpls sap shutdown”
+/configure system security profile “administrative” entry 171 action deny
