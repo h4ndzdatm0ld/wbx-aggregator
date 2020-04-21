@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import re, os, glob, sys, time, subprocess, difflib, json, yaml
+import re, os, glob, sys
 
 
 vpls = re.compile(r'(vpls\s\d.+\n.*\n.*\n.*\n.*\n.*\n.*)')
@@ -11,6 +11,64 @@ vpls = re.compile(r'(vpls\s\d.+\n.*\n.*\n.*\n.*\n.*\n.*)')
 # to dictionaries. Once the final dictionary is generated, the loop continues to generate a script to remove the VPLS and the SAPs and 
 # re-create them in the new, correct aggregate VPLS (300/400). A final script is generated and saved as a text file to use during the 
 # Maintenance Window # 1.
+
+def exhostid():
+    '''Extract the system name from a read log file of 'admin displayconfig'
+    The return output of this function is the system hostname of a log file.
+    A nested function is in place to read the .log file inside the PWD.
+    The re-match is processed to remove the outerqoutes it returns with.
+    '''
+    sysname = re.compile(r'((?<=system\s........name\s)(.*))')
+
+    def globfindfilez(regex):
+        ''' This function will simply locate a file in the DIR by passing the regex value (ie:(*.log))
+            The returned value by calling the function is the file.
+        '''
+        try:
+            if len(glob.glob(regex)) == 0:
+                sys.exit(f"No {regex} file found.")
+            else:
+                for file in glob.glob(regex):
+                    if len(glob.glob(regex)) > 1:
+                        sys.exit(f"Err.. found too many {regex} files")
+                    else:
+                        # print(f"Found a configuration file: {file}\n")
+                        return file
+        except Exception as e:
+            print(f"Something went wrong, {e}")
+    
+
+    with open((globfindfilez("*.log")), 'r+', encoding='utf-8') as f_rd:
+        contents = f_rd.read()
+
+    # Finditer to match the first match against the read file.
+    name = re.finditer(sysname,contents)
+
+    rem_qtz = ['"']
+    for match in name:
+        try:
+            system = (match.group(0))
+            # print(system)
+        except UnboundLocalError:
+            print("Err.. regex failed to find system name")
+
+    for i in rem_qtz:
+        try:
+            system = system.replace(i, '')
+            f_rd.close()
+            return system
+        except UnboundLocalError:
+            print("Err.. regex failed to find system name")
+            # At this point, the node system name is captured as a variable.
+            # named 'system'
+
+
+def createFolder(directory):
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except OSError:
+        print('Error: Creating directory. ' + directory)
 
 
 def globfindfile(regex):
@@ -30,13 +88,14 @@ def globfindfile(regex):
     except Exception as e:
         print(f"Something went wrong, {e}")
 
-
 def dictconvert(lst):
     ''' Convert a list to dict
     '''
-    res_dct = {lst[i]: lst[i + 1] for i in range(0, len(lst), 2)}
-    return res_dct
-
+    try:
+        res_dct = {lst[i]: lst[i + 1] for i in range(0, len(lst), 2)}
+        return res_dct
+    except Exception as e:
+        print(f"found an issue with dictconvert function. {e}")
 
 def vplsextract(compiledregex, file):
     '''
@@ -47,36 +106,32 @@ def vplsextract(compiledregex, file):
         valuextract = re.findall(compiledregex, file)
         list = ([l.strip() for l in valuextract])
         return list
-
     except Exception as e:
-        print(f"found an issue with vplsPrep function. {e}")
+        print(f"found an issue with vplsextract function. {e}")
 
 def vplslistmodify():
     try:
-
         # Passing the globfindfile function, to find the file and read it.
         with open((globfindfile("*.log")), 'r+', encoding='utf-8') as f_rd:
             contents = f_rd.read()
 
-            # print(vplsPrep(vpls,contents))
-
-            # Change into temp folder and create a file to offload the vpls info
+            hostname = exhostid()
+            # Change into temp folder and create an empty file to offload the vpls info
             # and manipulate the file with regex.
             BASE = os.getcwd()
+            createFolder('Temp')
             TEMPFILE = BASE+'/Temp/vplsinfo-temp.txt'
             tempfl=open(TEMPFILE, 'w+')
 
             #Run the vplsextract and loop through it. Write the contents to a temp file.
             vplsinfo = vplsextract(vpls,contents)
 
+
             for line in vplsinfo:
                 tempfl.writelines(line+'\n')
             # Close the temp file.
             tempfl.close()
-
-        #---------------------------------------------------------
-
-
+            
             # Pass over the  temp file and remove items which we need to eliminate to create a
             # working dictionary. Once the list is able to be split and converted into a dictionary, loop through it and extract the values to create the script
             # to remove all the saps and shut down and remove the vpls.
@@ -101,9 +156,9 @@ def vplslistmodify():
                 
                 #Splitting leaves 1 empty list at the end, simply pop it out.
                 PASS6.pop()
-                
+
                 BASE = os.getcwd()
-                TEMPFILE = BASE+'/Temp/vplsinfo-temp.txt'
+                TEMPFILE = BASE+'/Temp/''SOW-'+hostname+'.txt'
                 tempfl=open(TEMPFILE, 'w+')
 
                 try:
@@ -164,7 +219,6 @@ def vplslistmodify():
                             tempfl.write(f"/configure service vpls 400 sap {vplsdict['sap']} no shutdown\n")
                             tempfl.write(f"/configure service vpls 400 sap lag-31:400 create\n") #  Pass variable  of chosen LAG with openpyxl / excel(cq)
                             tempfl.write(f"/configure service vpls 400 sap lag-31:400 no shutdown\n")
-
 
                 except Exception as e:
                     print(e)
