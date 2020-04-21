@@ -209,7 +209,7 @@ def vplspassover():
 
             BASE = os.getcwd()
             TEMPFILE = BASE+'/Generated-SOW/'+hostname+'/'+hostname+'.txt'
-            tempfl=open(TEMPFILE, 'a')
+            tempfl=open(TEMPFILE, 'a') # Open the rendered template/config and APPEND the following:
 
             try:
                 for x in PASS6:
@@ -224,7 +224,6 @@ def vplspassover():
                         tempfl.write(f"/configure service vpls {vplsdict['vpls']} sap {vplsdict['lag-out']} shutdown\n")
                         tempfl.write(f"/configure service vpls {vplsdict['vpls']} no sap {vplsdict['lag-out']}\n")
                         tempfl.write(f"/configure service no vpls {vplsdict['vpls']}\n")
-                        tempfl.write(f"/configure service vpls 300\n")
                         tempfl.write(f"/configure service vpls 300 sap {vplsdict['sap']} create\n")
                         tempfl.write(f"/configure service vpls 300 sap {vplsdict['sap']} no shutdown\n")
                     elif '4' in vplsdict['customer']:
@@ -236,7 +235,6 @@ def vplspassover():
                         tempfl.write(f"/configure service vpls {vplsdict['vpls']} sap {vplsdict['lag-out']} shutdown\n")
                         tempfl.write(f"/configure service vpls {vplsdict['vpls']} no sap {vplsdict['lag-out']}\n")
                         tempfl.write(f"/configure service no vpls {vplsdict['vpls']}\n")
-                        tempfl.write(f"/configure service vpls 400\n")
                         tempfl.write(f"/configure service vpls 400 sap {vplsdict['sap']} create\n")
                         tempfl.write(f"/configure service vpls 400 sap {vplsdict['sap']} no shutdown\n")
 
