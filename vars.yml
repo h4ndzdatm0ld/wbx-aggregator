@@ -1,0 +1,7 @@
+---
+name: VARS to render Telecom/OA&M VPLS Configurations on Redundant or NON-Redundant WBX.
+# Remove the value for LAG2, if this is a non-redudant deployment.
+LAG1: lag-32
+LAG2: lag-42
+# Set to true if Entry 171 for Updated administrative profile to disable “SAP shutdown”
+ENTRY171: False
